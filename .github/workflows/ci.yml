@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        profile:
+          - name: parallel
+            flags: "--all-features"
+          - name: serial
+            flags: "--no-default-features"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        if: matrix.profile.name == 'parallel'
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Test (${{ matrix.profile.name }})
+        run: cargo test --all-targets ${{ matrix.profile.flags }}
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: 100% line coverage gate
+        run: cargo llvm-cov --lib --all-features --workspace --summary-only --fail-under-lines 100

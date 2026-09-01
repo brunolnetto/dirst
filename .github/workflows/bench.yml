@@ -1,0 +1,30 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: [parallel, serial]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Run criterion benchmarks (parallel)
+        if: matrix.mode == 'parallel'
+        run: cargo bench --bench geodesic_bench --features parallel -- --noplot
+
+      - name: Run criterion benchmarks (serial)
+        if: matrix.mode == 'serial'
+        run: cargo bench --bench geodesic_bench --no-default-features -- --noplot
+
+      - name: Upload criterion report (${{ matrix.mode }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: criterion-${{ matrix.mode }}
+          path: target/criterion
+          if-no-files-found: ignore
