@@ -1,0 +1,24 @@
+[package]
+name = "dirst"
+version = "0.1.0"
+edition = "2021"
+description = "Spatial distance metrics, geodesic curves, and travel-time calculations"
+license = "MIT"
+repository = "https://github.com/brunolnetto/dirst"
+keywords = ["geodesic", "distance", "geometry", "spatial", "riemannian"]
+categories = ["science", "mathematics"]
+readme = "README.md"
+
+[features]
+default = ["parallel"]
+parallel = ["dep:rayon"]
+
+[dependencies]
+rayon = { version = "1", optional = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false }
+
+[[bench]]
+name = "geodesic_bench"
+harness = false
