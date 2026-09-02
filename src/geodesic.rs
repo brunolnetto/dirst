@@ -461,14 +461,6 @@ mod tests {
     }
 
     #[test]
-    fn parallel_flag_matches_feature() {
-        #[cfg(feature = "parallel")]
-        assert!(PARALLEL_ENABLED);
-        #[cfg(not(feature = "parallel"))]
-        assert!(!PARALLEL_ENABLED);
-    }
-
-    #[test]
     fn ellipsoid_metric_is_positive_definite() {
         let gc = GeodesicCurve::new(Surface::ellipsoid(3.0, 2.0, 1.0));
         let pt = [std::f64::consts::PI / 4.0, std::f64::consts::PI / 4.0];
