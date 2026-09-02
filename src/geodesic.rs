@@ -20,11 +20,13 @@ pub const PARALLEL_ENABLED: bool = cfg!(feature = "parallel");
 
 // ── Surface ───────────────────────────────────────────────────────────────────
 
+type SurfaceMap = Box<dyn Fn(&[f64]) -> Vec<f64> + Send + Sync>;
+
 /// A parametric surface f : R^{`n_params`} → R^{`n_embed`} given by a closure.
 pub struct Surface {
     pub n_params: usize,
     pub n_embed: usize,
-    f: Box<dyn Fn(&[f64]) -> Vec<f64> + Send + Sync>,
+    f: SurfaceMap,
 }
 
 impl Surface {
