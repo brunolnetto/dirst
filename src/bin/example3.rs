@@ -4,8 +4,8 @@
 //!   - SymPy symbolic diff   → numerical central differences (H_SURF, H_METR)
 //!   - scipy solve_ivp       → RK4
 //!   - scipy simps           → composite Simpson's rule
-use std::f64::consts::PI;
 use dirst::geodesic::{GeodesicCurve, Surface};
+use std::f64::consts::PI;
 
 fn linspace(start: f64, end: f64, n: usize) -> Vec<f64> {
     let d = (end - start) / (n - 1) as f64;
@@ -20,7 +20,9 @@ fn print_christoffels(gc: &GeodesicCurve, pt: &[f64], labels: &[&str]) {
             for k in 0..n {
                 println!(
                     "  Γ^{}_{{{}{}}}: {:>12.6}",
-                    labels[i], labels[j], labels[k],
+                    labels[i],
+                    labels[j],
+                    labels[k],
                     gamma[i * n * n + j * n + k]
                 );
             }

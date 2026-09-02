@@ -1,13 +1,11 @@
+use dirst::{distance, travel_time, Method};
 /// Mirrors examples/example.py from the spycio Python package.
 use std::f64::consts::PI;
-use dirst::{distance, travel_time, Method};
 
 fn format_distance(a: &[f64], b: &[f64], speed: f64, method: &Method) -> String {
     let d = distance(a, b, method).unwrap();
     let eta = travel_time(speed, a, b, method).unwrap();
-    format!(
-        "A:{a:?}, B:{b:?}, speed:{speed}, method:{method}, distance:{d}, eta:{eta}"
-    )
+    format!("A:{a:?}, B:{b:?}, speed:{speed}, method:{method}, distance:{d}, eta:{eta}")
 }
 
 fn format_distance_with_config(a: &[f64], b: &[f64], speed: f64, method: &Method) -> String {
@@ -30,7 +28,10 @@ fn main() {
     let d = &[PI / 2.0, 0.0];
     let speed = 1.0_f64;
 
-    println!("Euclidean distance: {}", distance(a, b, &Method::Euclidean).unwrap());
+    println!(
+        "Euclidean distance: {}",
+        distance(a, b, &Method::Euclidean).unwrap()
+    );
     println!();
 
     let no_config = [

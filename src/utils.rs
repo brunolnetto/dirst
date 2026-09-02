@@ -45,9 +45,7 @@ pub fn is_spherical(u: &[f64]) -> bool {
     if n < 2 {
         return false;
     }
-    u[..n - 1].iter().all(|&x| x >= 0.0 && x <= PI)
-        && u[n - 1] >= 0.0
-        && u[n - 1] <= 2.0 * PI
+    u[..n - 1].iter().all(|&x| x >= 0.0 && x <= PI) && u[n - 1] >= 0.0 && u[n - 1] <= 2.0 * PI
 }
 
 /// Convert n-dimensional spherical coordinates to (n+1)-dimensional Cartesian.

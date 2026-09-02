@@ -12,8 +12,8 @@ use rayon::prelude::*;
 // Step sizes chosen to balance truncation and roundoff for 64-bit floats.
 const H_SURF: f64 = 1e-6; // for ∂fₖ/∂xⁱ  (optimal ≈ ε^{1/3} ≈ 6e-6)
 const H_METR: f64 = 1e-4; // for ∂g_{ab}/∂xᶜ  (optimal ≈ ε_g^{1/3})
-// scipy solve_ivp (RK45 adaptive) uses internal steps far smaller than the
-// t_eval spacing.  We match that behaviour with this fixed maximum RK4 step.
+                          // scipy solve_ivp (RK45 adaptive) uses internal steps far smaller than the
+                          // t_eval spacing.  We match that behaviour with this fixed maximum RK4 step.
 const DT_MAX: f64 = 1e-3;
 
 pub const PARALLEL_ENABLED: bool = cfg!(feature = "parallel");
@@ -33,7 +33,11 @@ impl Surface {
         n_embed: usize,
         f: impl Fn(&[f64]) -> Vec<f64> + Send + Sync + 'static,
     ) -> Self {
-        Surface { n_params, n_embed, f: Box::new(f) }
+        Surface {
+            n_params,
+            n_embed,
+            f: Box::new(f),
+        }
     }
 
     /// Paraboloid: f(u, v) = (u, v, u² + v²)
@@ -76,7 +80,10 @@ fn surface_diff(s: &Surface, coords: &[f64], idx: usize) -> Vec<f64> {
     cm[idx] -= H_SURF;
     let fp = s.eval(&cp);
     let fm = s.eval(&cm);
-    fp.iter().zip(&fm).map(|(a, b)| (a - b) / (2.0 * H_SURF)).collect()
+    fp.iter()
+        .zip(&fm)
+        .map(|(a, b)| (a - b) / (2.0 * H_SURF))
+        .collect()
 }
 
 /// g_{ij} = Σₖ (∂fₖ/∂xⁱ)(∂fₖ/∂xʲ)
@@ -104,20 +111,29 @@ fn mat_inv(a: &[f64], n: usize) -> Vec<f64> {
     let w = 2 * n;
     let mut aug = vec![0.0_f64; n * w];
     for i in 0..n {
-        for j in 0..n { aug[i * w + j] = a[i * n + j]; }
+        for j in 0..n {
+            aug[i * w + j] = a[i * n + j];
+        }
         aug[i * w + n + i] = 1.0;
     }
     for col in 0..n {
         let pr = (col..n)
             .max_by(|&r1, &r2| {
-                aug[r1 * w + col].abs().partial_cmp(&aug[r2 * w + col].abs()).unwrap()
+                aug[r1 * w + col]
+                    .abs()
+                    .partial_cmp(&aug[r2 * w + col].abs())
+                    .unwrap()
             })
             .unwrap();
-        for j in 0..w { aug.swap(col * w + j, pr * w + j); }
+        for j in 0..w {
+            aug.swap(col * w + j, pr * w + j);
+        }
         let pv = aug[col * w + col];
         assert!(pv.abs() > 1e-14, "singular metric tensor at this point");
         let ip = 1.0 / pv;
-        for j in 0..w { aug[col * w + j] *= ip; }
+        for j in 0..w {
+            aug[col * w + j] *= ip;
+        }
         for row in 0..n {
             if row != col {
                 let f = aug[row * w + col];
@@ -130,7 +146,9 @@ fn mat_inv(a: &[f64], n: usize) -> Vec<f64> {
     }
     let mut inv = vec![0.0_f64; n * n];
     for i in 0..n {
-        for j in 0..n { inv[i * n + j] = aug[i * w + n + j]; }
+        for j in 0..n {
+            inv[i * n + j] = aug[i * w + n + j];
+        }
     }
     inv
 }
@@ -183,8 +201,7 @@ fn christoffel_at(s: &Surface, coords: &[f64]) -> Vec<f64> {
             0.5 * (0..n)
                 .map(|l| {
                     gi[i * n + l]
-                        * (dg[l * n * n + j * n + k]
-                            + dg[l * n * n + k * n + j]
+                        * (dg[l * n * n + j * n + k] + dg[l * n * n + k * n + j]
                             - dg[j * n * n + k * n + l])
                 })
                 .sum::<f64>()
@@ -199,8 +216,7 @@ fn christoffel_at(s: &Surface, coords: &[f64]) -> Vec<f64> {
             0.5 * (0..n)
                 .map(|l| {
                     gi[i * n + l]
-                        * (dg[l * n * n + j * n + k]
-                            + dg[l * n * n + k * n + j]
+                        * (dg[l * n * n + j * n + k] + dg[l * n * n + k * n + j]
                             - dg[j * n * n + k * n + l])
                 })
                 .sum::<f64>()
@@ -212,9 +228,17 @@ fn christoffel_at(s: &Surface, coords: &[f64]) -> Vec<f64> {
 /// 4th-order Runge-Kutta step.
 fn rk4<F: Fn(f64, &[f64]) -> Vec<f64>>(f: F, t: f64, y: &[f64], dt: f64) -> Vec<f64> {
     let k1 = f(t, y);
-    let y2: Vec<f64> = y.iter().zip(&k1).map(|(yi, ki)| yi + 0.5 * dt * ki).collect();
+    let y2: Vec<f64> = y
+        .iter()
+        .zip(&k1)
+        .map(|(yi, ki)| yi + 0.5 * dt * ki)
+        .collect();
     let k2 = f(t + 0.5 * dt, &y2);
-    let y3: Vec<f64> = y.iter().zip(&k2).map(|(yi, ki)| yi + 0.5 * dt * ki).collect();
+    let y3: Vec<f64> = y
+        .iter()
+        .zip(&k2)
+        .map(|(yi, ki)| yi + 0.5 * dt * ki)
+        .collect();
     let k3 = f(t + 0.5 * dt, &y3);
     let y4: Vec<f64> = y.iter().zip(&k3).map(|(yi, ki)| yi + dt * ki).collect();
     let k4 = f(t + dt, &y4);
@@ -227,7 +251,9 @@ fn rk4<F: Fn(f64, &[f64]) -> Vec<f64>>(f: F, t: f64, y: &[f64], dt: f64) -> Vec<
 /// Composite Simpson's 1/3 rule; trapezoidal fallback for the last interval when n is even.
 fn simpsons(t: &[f64], f: &[f64]) -> f64 {
     let n = t.len();
-    if n < 2 { return 0.0; }
+    if n < 2 {
+        return 0.0;
+    }
     let mut acc = 0.0;
     let mut i = 0;
     while i + 2 < n {
@@ -319,7 +345,9 @@ impl GeodesicCurve {
         let mut y = vec![vec![0.0; n_t]; n_y];
         let mut yc = y0.to_vec();
         let mut t_curr = t_eval[0];
-        for i in 0..n_y { y[i][0] = yc[i]; }
+        for i in 0..n_y {
+            y[i][0] = yc[i];
+        }
         for ti in 1..n_t {
             let t_target = t_eval[ti];
             let span = t_target - t_curr;
@@ -330,9 +358,14 @@ impl GeodesicCurve {
                 yc = rk4(|t, yy| self.geodesic_rhs(t, yy), t_step, &yc, dt_sub);
             }
             t_curr = t_target;
-            for i in 0..n_y { y[i][ti] = yc[i]; }
+            for i in 0..n_y {
+                y[i][ti] = yc[i];
+            }
         }
-        Solution { t: t_eval.to_vec(), y }
+        Solution {
+            t: t_eval.to_vec(),
+            y,
+        }
     }
 
     /// Arc length of the curve via composite Simpson's rule on the Riemannian speed.
@@ -431,5 +464,21 @@ mod tests {
         assert!(PARALLEL_ENABLED);
         #[cfg(not(feature = "parallel"))]
         assert!(!PARALLEL_ENABLED);
+    }
+
+    #[test]
+    fn ellipsoid_metric_is_positive_definite() {
+        let gc = GeodesicCurve::new(Surface::ellipsoid(3.0, 2.0, 1.0));
+        let pt = [std::f64::consts::PI / 4.0, std::f64::consts::PI / 4.0];
+        let g = gc.metric_tensor_at(&pt);
+        // diagonal entries must be positive for a valid Riemannian metric
+        assert!(g[0] > 0.0);
+        assert!(g[3] > 0.0);
+    }
+
+    #[test]
+    fn simpsons_returns_zero_for_short_inputs() {
+        assert_eq!(simpsons(&[], &[]), 0.0);
+        assert_eq!(simpsons(&[0.5], &[1.0]), 0.0);
     }
 }

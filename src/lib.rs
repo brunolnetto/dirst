@@ -47,7 +47,10 @@ impl std::fmt::Display for Method {
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
 fn p_norm(arr: &[f64], p: f64) -> f64 {
-    arr.iter().map(|&x| x.abs().powf(p)).sum::<f64>().powf(1.0 / p)
+    arr.iter()
+        .map(|&x| x.abs().powf(p))
+        .sum::<f64>()
+        .powf(1.0 / p)
 }
 
 fn p_norm_distance(c1: &[f64], c2: &[f64], p: f64) -> Result<f64, String> {
@@ -207,14 +210,30 @@ mod tests {
     fn pnorm_family_and_basic_metrics() {
         let a = [1.0, 1.0];
         let b = [2.0, 2.0];
-        approx(distance(&a, &b, &Method::PNorm(2.0)).unwrap(), 2.0_f64.sqrt(), 1e-12);
-        approx(distance(&a, &b, &Method::PNorm(3.0)).unwrap(), 2.0_f64.powf(1.0 / 3.0), 1e-12);
-        approx(distance(&a, &b, &Method::PNorm(f64::INFINITY)).unwrap(), 1.0, 1e-12);
+        approx(
+            distance(&a, &b, &Method::PNorm(2.0)).unwrap(),
+            2.0_f64.sqrt(),
+            1e-12,
+        );
+        approx(
+            distance(&a, &b, &Method::PNorm(3.0)).unwrap(),
+            2.0_f64.powf(1.0 / 3.0),
+            1e-12,
+        );
+        approx(
+            distance(&a, &b, &Method::PNorm(f64::INFINITY)).unwrap(),
+            1.0,
+            1e-12,
+        );
         assert!(distance(&a, &b, &Method::PNorm(0.5)).is_err());
 
         approx(distance(&a, &b, &Method::Manhattan).unwrap(), 2.0, 1e-12);
         approx(distance(&a, &b, &Method::CityBlock).unwrap(), 2.0, 1e-12);
-        approx(distance(&a, &b, &Method::Euclidean).unwrap(), 2.0_f64.sqrt(), 1e-12);
+        approx(
+            distance(&a, &b, &Method::Euclidean).unwrap(),
+            2.0_f64.sqrt(),
+            1e-12,
+        );
         approx(distance(&a, &b, &Method::SqEuclidean).unwrap(), 2.0, 1e-12);
         approx(distance(&a, &b, &Method::Max).unwrap(), 1.0, 1e-12);
         approx(distance(&a, &b, &Method::Chebyshev).unwrap(), 1.0, 1e-12);
@@ -229,7 +248,11 @@ mod tests {
 
         let c1 = [1.0, 2.0];
         let c2 = [3.0, 4.0];
-        approx(distance(&c1, &c2, &Method::Canberra).unwrap(), 2.0 / 4.0 + 2.0 / 6.0, 1e-12);
+        approx(
+            distance(&c1, &c2, &Method::Canberra).unwrap(),
+            2.0 / 4.0 + 2.0 / 6.0,
+            1e-12,
+        );
         approx(distance(&c1, &c2, &Method::BrayCurtis).unwrap(), 0.4, 1e-12);
     }
 
@@ -237,16 +260,24 @@ mod tests {
     fn sphere_and_geographical_methods() {
         let s1 = [0.0, 0.0];
         let s2 = [PI / 2.0, 0.0];
-        approx(distance(&s1, &s2, &Method::Sphere(1.0)).unwrap(), PI / 2.0, 1e-12);
+        approx(
+            distance(&s1, &s2, &Method::Sphere(1.0)).unwrap(),
+            PI / 2.0,
+            1e-12,
+        );
         approx(great_circle_distance(&s1, &s2, 1.0), PI / 2.0, 1e-12);
         assert!(distance(&[-1.0, 0.0], &s2, &Method::Sphere(1.0)).is_err());
 
         let g1 = [0.0, 0.0];
         let g2 = [0.0, 90.0];
-        approx(distance(&g1, &g2, &Method::Geographical(1.0)).unwrap(), PI / 2.0, 1e-12);
+        approx(
+            distance(&g1, &g2, &Method::Geographical(1.0)).unwrap(),
+            PI / 2.0,
+            1e-12,
+        );
 
-        let both_bad = distance(&[200.0, 300.0], &[200.0, 300.0], &Method::Geographical(1.0))
-            .unwrap_err();
+        let both_bad =
+            distance(&[200.0, 300.0], &[200.0, 300.0], &Method::Geographical(1.0)).unwrap_err();
         assert_eq!(both_bad, "Both provided coordinates are not geographical!");
 
         let bad_1 = distance(&[200.0, 0.0], &[0.0, 0.0], &Method::Geographical(1.0)).unwrap_err();
